@@ -32,6 +32,43 @@
 (require 'oauth2)
 (require 'simple-httpd)
 
+
+(defconst spotify-doom-client-id "your-client-id")
+(defconst spotify-doom-redirect-uri "http://localhost:8080/callback")
+
+(defun spotify-doom-generate-code-verifier ()
+  "Generate a random code verifier."
+  )
+
+(defun spotify-doom-generate-code-challenge (code-verifier)
+  "Generate a code challenge from the code verifier."
+  )
+
+(defun spotify-doom-start-web-server ()
+  "Start a local web server to handle the OAuth2 callback."
+  )
+
+(defun spotify-doom-authorization-url (code-challenge)
+  "Generate the authorization URL with the provided code challenge."
+  )
+
+(defun spotify-doom-handle-callback (request)
+  "Handle the callback from the Spotify authorization server."
+  )
+
+(defun spotify-doom-exchange-auth-code (auth-code code-verifier)
+  "Exchange the authorization code for an access token."
+  )
+
+(defun spotify-doom-authorize ()
+  "Start the Spotify authorization process using PKCE flow."
+  (interactive)
+  (let ((code-verifier (spotify-doom-generate-code-verifier))
+        (code-challenge (spotify-doom-generate-code-challenge code-verifier)))
+    (spotify-doom-start-web-server)
+    (browse-url (spotify-doom-authorization-url code-challenge))
+    ))
+
 ;;; Code:
 
 ;; Your package implementation goes here
