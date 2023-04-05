@@ -1,0 +1,7 @@
+.DS_Store
+*.elc
+/auto-save-list/
+/elpa/
+/backup/
+*~
+.spotify-doom.env

@@ -26,13 +26,18 @@
 ;; SOFTWARE.
 
 ;; Packages-Required
-;; ((emacs "26.1") (request "0.3.3") (oauth2 "0.10") (simple-httpd "1.5.1"))
+;; ((emacs "26.1") (request "0.3.3") (oauth2 "0.10") (simple-httpd "1.5.1") (exec-path-from-shell "1.12"))
 
 (require 'request)
 (require 'oauth2)
 (require 'simple-httpd)
 (require 'cl-lib)
+(require 'exec-path-from-shell)
 
+
+;; Load environment variables from .env file
+(exec-path-from-shell-copy-env "CLIENT_ID")
+(exec-path-from-shell-copy-env "CLIENT_SECRET")
 
 (defconst spotify-doom-client-id "your-client-id")
 (defconst spotify-doom-redirect-uri "http://localhost:8080/callback")
