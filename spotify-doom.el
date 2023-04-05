@@ -31,6 +31,7 @@
 (require 'request)
 (require 'oauth2)
 (require 'simple-httpd)
+(require 'cl-lib)
 
 
 (defconst spotify-doom-client-id "your-client-id")
@@ -38,11 +39,13 @@
 
 (defun spotify-doom-generate-code-verifier ()
   "Generate a random code verifier."
-  )
+  (cl-loop for i below 43
+           collect (cl-random 62) into chars
+           finally return (concat (mapcar (lambda (n) (aref "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz" n)) chars))))
 
 (defun spotify-doom-generate-code-challenge (code-verifier)
   "Generate a code challenge from the code verifier."
-  )
+  (base64-url-encode (secure-hash 'sha256 code-verifier nil nil t)))
 
 (defun spotify-doom-start-web-server ()
   "Start a local web server to handle the OAuth2 callback."
