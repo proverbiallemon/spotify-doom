@@ -1,0 +1,96 @@
+#+title: spotify-doom.el README
+#+TITLE: Spotify-Doom
+#+AUTHOR: Lemon Newby
+#+EMAIL: lemon.newby@gmail.com
+#+LANGUAGE: en
+#+OPTIONS: ':nil *:t -:t ::t <:t H:3 \n:nil @:t ::t |:t ^:nil -:t f:t *:t TeX:t LaTeX:nil skip:nil d:nil todo:t pri:nil tags:not-in-toc toc:t \n:nil <:t H:3 !:t ::t |:t TeX:t LaTeX:nil d:nil ^:nil arch:nil
+
+* Introduction
+
+Spotify-Doom is a Doom Emacs package designed to control Spotify playback and manage playlists directly from Doom Emacs. This package provides a seamless experience for Spotify users who spend a significant amount of time in Doom Emacs.
+
+Some key features of Spotify-Doom include:
+
+- Playback control (play, pause, next, previous)
+- Playlist management (create, delete, reorder)
+- Search functionality (search for tracks, artists, albums, playlists)
+- Device switching (switch between active devices)
+- Track information (view current track information)
+
+* Installation
+
+** Prerequisites
+
+To use Spotify-Doom, you must have the following:
+
+- Emacs version 26.1 or later
+- Doom Emacs (https://github.com/hlissner/doom-emacs)
+- A Spotify account (https://www.spotify.com/)
+
+** Step 1: Clone the repository
+
+Clone the Spotify-Doom repository to your local machine:
+
+#+begin_src sh
+git clone https://github.com/proverbiallemon/spotify-doom.git
+#+end_src
+
+** Step 2: Add the package to Doom Emacs
+
+Add the local package to your Doom Emacs configuration. In your `~/.doom.d/packages.el` file, add the following line:
+
+#+begin_src emacs-lisp
+(package! spotify-doom :recipe (:local-repo "/path/to/spotify-doom/git"))
+#+end_src
+
+Replace "/path/to/spotify-doom/git" with the actual path to the cloned `spotify-doom` repository.
+
+** Step 3: Synchronize your Doom Emacs configuration
+
+Run the following command in your terminal to synchronize your Doom Emacs configuration:
+
+#+begin_src sh
+doom sync
+#+end_src
+
+* Usage
+
+To use Spotify-Doom in Doom Emacs, follow these steps:
+
+1. Authorize your Spotify account: To use the Spotify API, you need to authorize your Spotify account. Follow the OAuth 2.0 authorization flow provided by the package.
+
+2. Access Spotify-Doom: After authorization, you can access Spotify-Doom using the provided keybindings and interactive commands.
+
+3. Control Spotify playback: Use the package's features to control playback, manage playlists, search for music, switch devices, and view track information.
+
+* Keybindings
+
+Here's a list of the default keybindings for Spotify-Doom:
+
+| Keybinding    | Description                        |
+|---------------+------------------------------------|
+| SPC m p       | Toggle play/pause                  |
+| SPC m n       | Play next track                    |
+| SPC m b       | Play previous track                |
+| SPC m s       | Search for tracks, artists, albums |
+| SPC m l       | List and manage playlists          |
+| SPC m d       | Switch active devices              |
+| SPC m i       | Show current track information     |
+
+You can customize these keybindings in your Doom Emacs configuration.
+
+* Customization
+
+You can customize Spotify-Doom by modifying variables and options in your Doom Emacs configuration. Refer to the package's source code and documentation for details on available customization options.
+
+Contributing
+Contributions to Spotify-Doom are welcome! Please follow the standard GitHub workflow for submitting issues, creating pull requests, and collaborating on the project.
+
+License
+Spotify-Doom is licensed under the MIT License. See the LICENSE file in the repository for more information.
+
+Contact
+If you have any questions or need assistance, please contact Lemon Newby:
+
+Email: lemon.newby@gmail.com
+GitHub: https://github.com/proverbiallemon
