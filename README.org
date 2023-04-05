@@ -84,14 +84,14 @@ You can customize these keybindings in your Doom Emacs configuration.
 
 You can customize Spotify-Doom by modifying variables and options in your Doom Emacs configuration. Refer to the package's source code and documentation for details on available customization options.
 
-Contributing
+*** Contributing
 Contributions to Spotify-Doom are welcome! Please follow the standard GitHub workflow for submitting issues, creating pull requests, and collaborating on the project.
 
-License
+*** License
 Spotify-Doom is licensed under the MIT License. See the LICENSE file in the repository for more information.
 
-Contact
+*** Contact
 If you have any questions or need assistance, please contact Lemon Newby:
 
-Email: lemon.newby@gmail.com
-GitHub: https://github.com/proverbiallemon
+**** Email: lemon.newby@gmail.com
+**** GitHub: https://github.com/proverbiallemon
