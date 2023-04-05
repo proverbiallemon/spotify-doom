@@ -93,5 +93,5 @@ Spotify-Doom is licensed under the MIT License. See the LICENSE file in the repo
 *** Contact
 If you have any questions or need assistance, please contact Lemon Newby:
 
-**** Email: lemon.newby@gmail.com
+**** Email: [[mailto:lemon.newby@gmail.com][Lemon Newby]]
 **** GitHub: https://github.com/proverbiallemon
