@@ -6,7 +6,7 @@
 #+OPTIONS: ':nil *:t -:t ::t <:t H:3 \n:nil @:t ::t |:t ^:nil -:t f:t *:t TeX:t LaTeX:nil skip:nil d:nil todo:t pri:nil tags:not-in-toc toc:t \n:nil <:t H:3 !:t ::t |:t TeX:t LaTeX:nil d:nil ^:nil arch:nil
 
 * Introduction
-**This project is a current work in progress, things listed here in this README are subject to change and probably aren't currently fully implamented.
+** This project is a current work in progress, things listed here in this README are subject to change and probably aren't currently fully implamented.
 
 Spotify-Doom is a Doom Emacs package designed to control Spotify playback and manage playlists directly from Doom Emacs. This package provides a seamless experience for Spotify users who spend a significant amount of time in Doom Emacs.
 
