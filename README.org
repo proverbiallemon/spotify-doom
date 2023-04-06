@@ -70,13 +70,13 @@ Here's a list of the default keybindings for Spotify-Doom:
 
 | Keybinding    | Description                        |
 |---------------+------------------------------------|
-| SPC m p       | Toggle play/pause                  |
-| SPC m n       | Play next track                    |
-| SPC m b       | Play previous track                |
-| SPC m s       | Search for tracks, artists, albums |
-| SPC m l       | List and manage playlists          |
-| SPC m d       | Switch active devices              |
-| SPC m i       | Show current track information     |
+| SPC k p       | Toggle play/pause                  |
+| SPC k n       | Play next track                    |
+| SPC k b       | Play previous track                |
+| SPC k s       | Search for tracks, artists, albums |
+| SPC k l       | List and manage playlists          |
+| SPC k d       | Switch active devices              |
+| SPC k i       | Show current track information     |
 
 You can customize these keybindings in your Doom Emacs configuration.
 
