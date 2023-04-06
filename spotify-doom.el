@@ -53,22 +53,38 @@
            collect (cl-random 62) into chars
            finally return (concat (mapcar (lambda (n) (aref "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz" n)) chars))))
 
+(defun spotify-doom-base64-url-encode (string)
+  "Base64-url encode the STRING."
+  (let ((base64-str (base64-encode-string string t)))
+    (replace-regexp-in-string
+     "=" ""
+     (replace-regexp-in-string
+      "/" "_"
+      (replace-regexp-in-string
+       "+" "-"
+       base64-str)))))
+
+
 (defun spotify-doom-generate-code-challenge (code-verifier)
   "Generate a code challenge from the code verifier CODE-VERIFIER."
-  (base64-url-encode (secure-hash 'sha256 code-verifier nil nil t)))
+  (spotify-doom-base64-url-encode (secure-hash 'sha256 code-verifier nil nil t)))
 
-(defun spotify-doom-start-web-server ()
+
+(declare-function httpd-define-handler "simple-httpd" (name function))
+
+(defun spotify-doom-start-web-server (code-verifier)
   "Start a local web server to handle the OAuth2 callback."
- ;; Set the buffer-local variable to the current code-verifier
+  ;; Set the buffer-local variable to the current code-verifier
   (setq-local spotify-doom-code-verifier code-verifier)
   (httpd-stop) ; Ensure any existing server is stopped before starting a new one
   (setq httpd-port spotify-doom-httpd-port)
   (httpd-start)
-  (httpd-define-handler spotify-doom-callback proc request
-    "Handle the callback from the Spotify authorization server."
-    (spotify-doom-handle-callback request)
-    (with-httpd-buffer proc "text/html"
-      (insert "<!DOCTYPE html><html><body><h1>Authorization Successful</h1><p>You can close this window.</p></body></<html>"))))
+  (httpd-define-handler spotify-doom-callback
+    (lambda (proc request)
+      "Handle the callback from the Spotify authorization server."
+      (spotify-doom-handle-callback request)
+      (with-httpd-buffer proc "text/html"
+        (insert "<!DOCTYPE html><html><body><h1>Authorization Successful</h1><p>You can close this window.</p></body></<html>")))))
   (defun spotify-doom-authorization-url (code-challenge)
 "Generate the authorization URL with the provided code challenge CODE-CHALLENGE."
 (format "https://accounts.spotify.com/authorize?client_id=%s&response_type=code&redirect_uri=%s&code_challenge_method=S256&code_challenge=%s&scope=user-read-private%%20user-read-playback-state%%20user-modify-playback-state"
