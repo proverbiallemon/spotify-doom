@@ -98,12 +98,30 @@ spotify-doom-client-id (url-hexify-string spotify-doom-redirect-uri) code-challe
 
 (defun spotify-doom-handle-callback (request)
   "Handle the callback from the Spotify authorization server by REQUEST."
-  (let ((query (url-parse-query-string (cadr (assoc "QUERY_STRING" request)))))
-    (spotify-doom-exchange-auth-code (cdr (assoc "code" query)))))
+  (let ((auth-code (cdr (assoc "code" (url-parse-query-string (cadr (assoc "QUERY_STRING" request)))))))
+    (spotify-doom-exchange-auth-code auth-code)))
 
-(defun spotify-doom-exchange-auth-code (_auth-code)
-  "Exchange the authorization code AUTH-CODE for an access token.
-TODO: Implement the token exchange here.")
+(defun spotify-doom-exchange-auth-code (auth-code)
+  "Exchange the authorization code AUTH-CODE for an access token."
+  (request
+   "https://accounts.spotify.com/api/token"
+   :type "POST"
+   :headers '(("Content-Type" . "application/x-www-form-urlencoded"))
+   :data (list (cons "grant_type" "authorization_code")
+               (cons "code" auth-code)
+               (cons "redirect_uri" spotify-doom-redirect-uri)
+               (cons "client_id" spotify-doom-client-id)
+               (cons "client_secret" (getenv "CLIENT_SECRET"))
+               (cons "code_verifier" spotify-doom-code-verifier))
+   :parser 'json-read
+   :success (cl-function
+             (lambda (&key data &allow-other-keys)
+               (message "Access token: %s" (alist-get 'access_token data))
+               (message "Refresh token: %s" (alist-get 'refresh_token data))))
+   :error (cl-function
+           (lambda (&key error-thrown &allow-other-keys)
+             (message "Got error: %S" error-thrown)))))
+
 
 (defvar spotify-doom-code-verifier)
 
