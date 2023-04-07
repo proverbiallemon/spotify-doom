@@ -45,6 +45,7 @@
 (require 'simple-httpd)
 (require 'exec-path-from-shell)
 
+
 ;; Declare buffer-local variable code-verifier
 (defvar-local spotify-doom-code-verifier nil)
 
@@ -88,10 +89,15 @@
   (spotify-doom-base64-url-encode (secure-hash 'sha256 code-verifier nil nil t)))
 
 
-(declare-function httpd-define-handler "simple-httpd" (name function))
+;;(declare-function httpd-define-handler "simple-httpd" (name function))
 
 (defun spotify-doom-start-web-server (code-verifier)
    "Start a local web server to handle the OAuth2 callback.
+CODE-VERIFIER is the PKCE code verifier to be used."
+
+  ;; Set the buffer-local variable to the current code-verifier
+  (defun spotify-doom-start-web-server (code-verifier)
+  "Start a local web server to handle the OAuth2 callback.
 CODE-VERIFIER is the PKCE code verifier to be used."
 
   ;; Set the buffer-local variable to the current code-verifier
@@ -99,17 +105,16 @@ CODE-VERIFIER is the PKCE code verifier to be used."
   (httpd-stop) ; Ensure any existing server is stopped before starting a new one
   (setq httpd-port spotify-doom-httpd-port)
   (httpd-start)
-  (defvar spotify-doom-callback)
-  (httpd-define-handler spotify-doom-callback
-    (lambda (proc request)
-      "Handle the callback from the Spotify authorization server."
-      (spotify-doom-handle-callback request)
-      (with-httpd-buffer proc "text/html"
-        (insert "<!DOCTYPE html><html><body><h1>Authorization Successful</h1><p>You can close this window.</p></body></<html>")))))
-  (defun spotify-doom-authorization-url (code-challenge)
-"Generate the authorization URL with the provided code challenge CODE-CHALLENGE."
-(format "https://accounts.spotify.com/authorize?client_id=%s&response_type=code&redirect_uri=%s&code_challenge_method=S256&code_challenge=%s&scope=user-read-private%%20user-read-playback-state%%20user-modify-playback-state"
-spotify-doom-client-id (url-hexify-string spotify-doom-redirect-uri) code-challenge))
+
+  ;; Define the custom handler function
+  (defun spotify-doom-callback (proc request)
+    "Handle the callback from the Spotify authorization server."
+    (spotify-doom-handle-callback request)
+    (with-httpd-buffer proc "text/html"
+      (insert "<!DOCTYPE html><html><body><h1>Authorization Successful</h1><p>You can close this window.</p></body></<html>")))
+
+  ;; Add the custom handler to the httpd-alist variable
+  (add-to-list 'httpd-alist '("^/spotify-doom-callback$" . spotify-doom-callback))))
 
 (defun spotify-doom-handle-callback (request)
   "Handle the callback from the Spotify authorization server by REQUEST."
