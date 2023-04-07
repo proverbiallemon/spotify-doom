@@ -81,6 +81,7 @@ CODE-VERIFIER is the PKCE code verifier to be used."
   (httpd-stop) ; Ensure any existing server is stopped before starting a new one
   (setq httpd-port spotify-doom-httpd-port)
   (httpd-start)
+  (defvar spotify-doom-callback)
   (httpd-define-handler spotify-doom-callback
     (lambda (proc request)
       "Handle the callback from the Spotify authorization server."
