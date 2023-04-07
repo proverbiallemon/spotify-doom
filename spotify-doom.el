@@ -1,4 +1,4 @@
-;;; spotify-doom.el --- Control Spotify from Doom Emacs -*- lexical-binding: t -*-
+;;; spotify-doom.el --- Control Spotify -*- lexical-binding: t -*-
 
 ;; Author: Lemon Newby
 ;; URL: https://github.com/proverbiallemon/spotify-doom
@@ -73,7 +73,9 @@
 (declare-function httpd-define-handler "simple-httpd" (name function))
 
 (defun spotify-doom-start-web-server (code-verifier)
-  "Start a local web server to handle the OAuth2 callback."
+   "Start a local web server to handle the OAuth2 callback.
+CODE-VERIFIER is the PKCE code verifier to be used."
+
   ;; Set the buffer-local variable to the current code-verifier
   (setq-local spotify-doom-code-verifier code-verifier)
   (httpd-stop) ; Ensure any existing server is stopped before starting a new one
@@ -91,14 +93,14 @@
 spotify-doom-client-id (url-hexify-string spotify-doom-redirect-uri) code-challenge))
 
 (defun spotify-doom-handle-callback (request)
-"Handle the callback from the Spotify authorization server by REQUEST."
-(let ((query (url-parse-query-string (cadr (assoc "QUERY_STRING" request)))))
-(spotify-doom-exchange-auth-code (cdr (assoc "code" query)))))
+  "Handle the callback from the Spotify authorization server by REQUEST."
+  (let ((query (url-parse-query-string (cadr (assoc "QUERY_STRING" request)))))
+    (spotify-doom-exchange-auth-code (cdr (assoc "code" query)))))
 
-(defun spotify-doom-exchange-auth-code (auth-code)
-"Exchange the authorization code AUTH-CODE for an access token."
-;; TODO: Implement the token exchange here
-)
+(defun spotify-doom-exchange-auth-code (_auth-code)
+  "Exchange the authorization code AUTH-CODE for an access token.
+TODO: Implement the token exchange here.")
+
 
 (defun spotify-doom-authorize ()
   "Start the Spotify authorization process using PKCE flow."
