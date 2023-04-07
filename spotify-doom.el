@@ -43,8 +43,17 @@
 (defvar-local spotify-doom-code-verifier nil)
 
 ;; Load environment variables from .env file
-(exec-path-from-shell-copy-env "CLIENT_ID")
-(exec-path-from-shell-copy-env "CLIENT_SECRET")
+(defun spotify-doom-read-env (key)
+  "Read the value for KEY from the .env file."
+  (with-temp-buffer
+    (insert-file-contents "spotify-doom.env")
+    (goto-char (point-min))
+    (if (re-search-forward (format "^%s=\\(.*\\)$" key) nil t)
+        (match-string 1)
+      (error "Could not find %s in .env file" key))))
+
+(defvar spotify-doom-client-id (spotify-doom-read-env "CLIENT_ID"))
+(defvar spotify-doom-client-secret (spotify-doom-read-env "CLIENT_SECRET"))
 
 (defconst spotify-doom-client-id "your-client-id")
 (defconst spotify-doom-redirect-uri "http://localhost:8080/spotify-doom-callback")
