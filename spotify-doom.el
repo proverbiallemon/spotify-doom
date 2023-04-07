@@ -6,6 +6,12 @@
 ;; Keywords: multimedia, spotify, doom
 ;; Package-Requires: ((emacs "26.1") (request "0.3.3") (oauth2 "0.16") (simple-httpd "1.5.1") (exec-path-from-shell "1.12"))
 
+(eval-when-compile (require 'use-package))
+
+(require 'package)
+(add-to-list 'package-archives '("melpa" . "https://melpa.org/packages/") t)
+(package-initialize)
+
 ;; This file is not part of GNU Emacs.
 
 ;; Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -35,8 +41,8 @@
 
 (require 'request)
 (require 'oauth2)
-(require 'simple-httpd)
 (require 'cl-lib)
+(require 'simple-httpd)
 (require 'exec-path-from-shell)
 
 ;; Declare buffer-local variable code-verifier
@@ -137,10 +143,11 @@ spotify-doom-client-id (url-hexify-string spotify-doom-redirect-uri) code-challe
 (defun spotify-doom-authorize ()
   "Start the Spotify authorization process using PKCE flow."
   (interactive)
-  (let ((code-verifier (spotify-doom-generate-code-verifier))
-        (code-challenge (spotify-doom-generate-code-challenge spotify-doom-code-verifier)))
-    (spotify-doom-start-web-server code-verifier)
-    (browse-url (spotify-doom-authorization-url code-challenge))))
+  (let ((code-verifier (spotify-doom-generate-code-verifier)))
+    (let ((code-challenge (spotify-doom-generate-code-challenge code-verifier)))
+      (message "Code verifier: %s, Code challenge: %s" code-verifier code-challenge)
+      (spotify-doom-start-web-server code-verifier)
+      (browse-url (spotify-doom-authorization-url code-challenge)))))
 
 (provide 'spotify-doom)
 
