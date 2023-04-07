@@ -4,7 +4,7 @@
 ;; URL: https://github.com/proverbiallemon/spotify-doom
 ;; Version: 0.1.1
 ;; Keywords: multimedia, spotify, doom
-;; Package-Requires: ((emacs "26.1") (request "0.3.3") (oauth2 "0.10") (simple-httpd "1.5.1") (exec-path-from-shell "1.12"))
+;; Package-Requires: ((emacs "26.1") (request "0.3.3") (oauth2 "0.16") (simple-httpd "1.5.1") (exec-path-from-shell "1.12"))
 
 ;; This file is not part of GNU Emacs.
 
@@ -38,6 +38,9 @@
 (require 'simple-httpd)
 (require 'cl-lib)
 (require 'exec-path-from-shell)
+
+;; Declare buffer-local variable code-verifier
+(defvar-local spotify-doom-code-verifier nil)
 
 ;; Load environment variables from .env file
 (exec-path-from-shell-copy-env "CLIENT_ID")
@@ -102,12 +105,13 @@ spotify-doom-client-id (url-hexify-string spotify-doom-redirect-uri) code-challe
   "Exchange the authorization code AUTH-CODE for an access token.
 TODO: Implement the token exchange here.")
 
+(defvar spotify-doom-code-verifier)
 
 (defun spotify-doom-authorize ()
   "Start the Spotify authorization process using PKCE flow."
   (interactive)
   (let ((code-verifier (spotify-doom-generate-code-verifier))
-        (code-challenge (spotify-doom-generate-code-challenge code-verifier)))
+        (code-challenge (spotify-doom-generate-code-challenge spotify-doom-code-verifier)))
     (spotify-doom-start-web-server code-verifier)
     (browse-url (spotify-doom-authorization-url code-challenge))))
 
