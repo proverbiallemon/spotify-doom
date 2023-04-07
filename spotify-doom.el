@@ -59,8 +59,6 @@
         (match-string 1)
       (error "Could not find %s in .env file" key))))
 
-
-
 (defvar spotify-doom-client-id (spotify-doom-read-env "CLIENT_ID"))
 (defvar spotify-doom-client-secret (spotify-doom-read-env "CLIENT_SECRET"))
 
@@ -78,6 +76,7 @@
 
 (defun spotify-doom-base64-url-encode (string)
   "Base64-url encode the STRING."
+  ;; Replace + with -, / with _, and remove any trailing =
   (let ((base64-str (base64-encode-string string t)))
     (replace-regexp-in-string
      "=" ""
@@ -92,39 +91,26 @@
   "Generate a code challenge from the code verifier CODE-VERIFIER."
   (spotify-doom-base64-url-encode (secure-hash 'sha256 code-verifier nil nil t)))
 
-
-;;(declare-function httpd-define-handler "simple-httpd" (name function))
-
-;;(defun spotify-doom-start-web-server (code-verifier)
-   ;;"Start a local web server to handle the OAuth2 callback.
-;;CODE-VERIFIER is the PKCE code verifier to be used."
-
-  ;; Set the buffer-local variable to the current code-verifier
 (defun spotify-doom-start-web-server (code-verifier)
   "Start a local web server to handle the OAuth2 callback.
 CODE-VERIFIER is the PKCE code verifier to be used."
-
-  ;; Set the buffer-local variable to the current code-verifier
   (setq-local spotify-doom-code-verifier code-verifier)
   (httpd-stop) ; Ensure any existing server is stopped before starting a new one
   (setq httpd-port spotify-doom-httpd-port)
   (httpd-start))
 
-  (defun spotify-doom-handle-callback (request)
-    "Handle the callback from the Spotify authorization server by REQUEST."
-    (let ((auth-code (cdr (assoc "code" (url-parse-query-string (cadr (assoc "QUERY_STRING" request)))))))
-      (spotify-doom-exchange-auth-code auth-code)))
+(defun spotify-doom-callback (proc request)
+  "Handle the callback from the Spotify authorization server.REQUEST PROC."
+  (spotify-doom-handle-callback request)
+  (with-httpd-buffer proc "text/html"
+    (insert "<!DOCTYPE html><html><body><h1>Authorization Successful</h1><p>You can close this window.</p></body></<html>")))
 
+(add-to-list 'httpd-alist '("^/spotify-doom-callback" . spotify-doom-callback))
 
-  ;; Define the custom handler function
-  (defun spotify-doom-callback (proc request)
-    "Handle the callback from the Spotify authorization server.REQUEST PROC."
-    (spotify-doom-handle-callback request)
-    (with-httpd-buffer proc "text/html"
-      (insert "<!DOCTYPE html><html><body><h1>Authorization Successful</h1><p>You can close this window.</p></body></<html>"))
-
-  ;; Add the custom handler to the httpd-alist variable
-  (add-to-list 'httpd-alist '("^/spotify-doom-callback" . spotify-doom-callback)))
+(defun spotify-doom-handle-callback (request)
+  "Handle the callback from the Spotify authorization server by REQUEST."
+  (let ((auth-code (cdr (assoc "code" (url-parse-query-string (cadr (assoc "QUERY_STRING" request)))))))
+    (spotify-doom-exchange-auth-code auth-code)))
 
 (defun spotify-doom-exchange-auth-code (auth-code)
   "Exchange the authorization code AUTH-CODE for an access token."
@@ -146,7 +132,6 @@ CODE-VERIFIER is the PKCE code verifier to be used."
    :error (cl-function
            (lambda (&key error-thrown &allow-other-keys)
              (message "Got error: %S" error-thrown)))))
-
 
 (defvar spotify-doom-code-verifier)
 
