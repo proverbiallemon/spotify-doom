@@ -44,106 +44,113 @@
 (require 'cl-lib)
 (require 'simple-httpd)
 (require 'exec-path-from-shell)
+(require 'request)
+(require 'json)
+(require 'url-util)
 
-
-;; Declare buffer-local variable code-verifier
-(defvar-local spotify-doom-code-verifier nil)
 
 ;; Load environment variables from .env file
 (defun spotify-doom-read-env (key)
   "Read the value for KEY from the .env file."
-  (with-temp-buffer
-    (insert-file-contents "spotify-doom.env")
-    (goto-char (point-min))
-    (if (re-search-forward (format "^%s=\\(.*\\)$" key) nil t)
-        (match-string 1)
-      (error "Could not find %s in .env file" key))))
+  (let ((default-directory (file-name-directory load-file-name)))
+    (with-temp-buffer
+      (insert-file-contents "spotify-doom.env")
+      (goto-char (point-min))
+      (if (re-search-forward (format "^%s=\\(.*\\)$" key) nil t)
+          (match-string 1)
+        (error "Could not find %s in .env file" key)))))
 
-(defvar spotify-doom-client-id (spotify-doom-read-env "CLIENT_ID"))
-(defvar spotify-doom-client-secret (spotify-doom-read-env "CLIENT_SECRET"))
 
-(message "Client ID: %s, Client Secret: %s" spotify-doom-client-id spotify-doom-client-secret)
 
-;;(defconst spotify-doom-client-id "your-client-id")
-(defconst spotify-doom-redirect-uri "http://localhost:8080/spotify-doom-callback")
-(defconst spotify-doom-httpd-port 8080)
+(defvar spotify-doom-client-id (spotify-doom-read-env "SPOTIFY_CLIENT_ID")
+  "Your Spotify Client ID.")
 
-(defun spotify-doom-generate-code-verifier ()
-  "Generate a random code verifier."
-  (cl-loop for i below 43
-           collect (cl-random 62) into chars
-           finally return (concat (mapcar (lambda (n) (aref "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz" n)) chars))))
+(defvar spotify-doom-redirect-uri (spotify-doom-read-env "SPOTIFY_REDIRECT_URI")
+  "Your Spotify Redirect URI.")
 
-(defun spotify-doom-base64-url-encode (string)
-  "Base64-url encode the STRING."
-  ;; Replace + with -, / with _, and remove any trailing =
-  (let ((base64-str (base64-encode-string string t)))
-    (replace-regexp-in-string
-     "=" ""
-     (replace-regexp-in-string
-      "/" "_"
-      (replace-regexp-in-string
-       "+" "-"
-       base64-str)))))
-
+(defun spotify-doom-generate-random-string (length)
+  (let* ((chars "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_~.")
+         (chars-length (length chars))
+         (random-string (make-string length 0)))
+    (dotimes (i length random-string)
+      (aset random-string i (aref chars (random chars-length))))))
 
 (defun spotify-doom-generate-code-challenge (code-verifier)
-  "Generate a code challenge from the code verifier CODE-VERIFIER."
-  (spotify-doom-base64-url-encode (secure-hash 'sha256 code-verifier nil nil t)))
+  (require 'base64)
+  (require 'sha1)
+  (let* ((verifier-bytes (encode-coding-string code-verifier 'utf-8))
+         (hashed (secure-hash 'sha256 verifier-bytes nil nil t))
+         (base64url (base64-encode-string hashed t)))
+    (replace-regexp-in-string "=" "" base64url)))
 
-(defun spotify-doom-start-web-server (code-verifier)
-  "Start a local web server to handle the OAuth2 callback.
-CODE-VERIFIER is the PKCE code verifier to be used."
-  (setq-local spotify-doom-code-verifier code-verifier)
-  (httpd-stop) ; Ensure any existing server is stopped before starting a new one
-  (setq httpd-port spotify-doom-httpd-port)
-  (httpd-start))
+(defun spotify-doom-authorization-url (code-challenge)
+  (let ((url (concat "https://accounts.spotify.com/authorize"
+                     "?client_id=" spotify-doom-client-id
+                     "&response_type=code"
+                     "&redirect_uri=" (url-hexify-string spotify-doom-redirect-uri)
+                     "&code_challenge_method=S256"
+                     "&code_challenge=" code-challenge
+                     "&scope=user-read-private%20user-read-email")))
+    url))
 
-(defun spotify-doom-callback (proc request)
-  "Handle the callback from the Spotify authorization server.REQUEST PROC."
-  (spotify-doom-handle-callback request)
-  (with-httpd-buffer proc "text/html"
-    (insert "<!DOCTYPE html><html><body><h1>Authorization Successful</h1><p>You can close this window.</p></body></<html>")))
-
-(add-to-list 'httpd-alist '("^/spotify-doom-callback" . spotify-doom-callback))
-
-(defun spotify-doom-handle-callback (request)
-  "Handle the callback from the Spotify authorization server by REQUEST."
-  (let ((auth-code (cdr (assoc "code" (url-parse-query-string (cadr (assoc "QUERY_STRING" request)))))))
-    (spotify-doom-exchange-auth-code auth-code)))
-
-(defun spotify-doom-exchange-auth-code (auth-code)
-  "Exchange the authorization code AUTH-CODE for an access token."
+(defun spotify-doom-request-token (code code-verifier)
   (request
    "https://accounts.spotify.com/api/token"
    :type "POST"
-   :headers '(("Content-Type" . "application/x-www-form-urlencoded"))
-   :data (list (cons "grant_type" "authorization_code")
-               (cons "code" auth-code)
+   :data (list (cons "client_id" spotify-doom-client-id)
+               (cons "grant_type" "authorization_code")
+               (cons "code" code)
                (cons "redirect_uri" spotify-doom-redirect-uri)
-               (cons "client_id" (spotify-doom-read-env "CLIENT_ID"))
-               (cons "client_secret" (spotify-doom-read-env "CLIENT_SECRET"))
-               (cons "code_verifier" spotify-doom-code-verifier))
+               (cons "code_verifier" code-verifier))
    :parser 'json-read
    :success (cl-function
              (lambda (&key data &allow-other-keys)
-               (message "Access token: %s" (alist-get 'access_token data))
-               (message "Refresh token: %s" (alist-get 'refresh_token data))))
+               (message "Access Token: %s" (alist-get 'access_token data))
+               (message "Refresh Token: %s" (alist-get 'refresh_token data))))
    :error (cl-function
-           (lambda (&key error-thrown &allow-other-keys)
+           (lambda (&rest args &key error-thrown &allow-other-keys)
              (message "Got error: %S" error-thrown)))))
 
-(defvar spotify-doom-code-verifier)
+(defun spotify-doom-refresh-token (refresh-token)
+  (request
+   "https://accounts.spotify.com/api/token"
+   :type "POST"
+   :data (list (cons "client_id" spotify-doom-client-id)
+               (cons "grant_type" "refresh_token")
+               (cons "refresh_token" refresh-token))
+   :parser 'json-read
+   :success (cl-function
+             (lambda (&key data &allow-other-keys)
+               (message "New Access Token: %s" (alist-get 'access_token data))))
+   :error (cl-function
+           (lambda (&rest args &key error-thrown &allow-other-keys)
+             (message "Got error: %S" error-thrown)))))
 
+(defun spotify-doom-get-user-info (access-token)
+  (request
+   "https://api.spotify.com/v1/me"
+   :type "GET"
+   :headers (list (cons "Authorization" (concat "Bearer " access-token)))
+   :parser 'json-read
+   :success (cl-function
+             (lambda (&key data &allow-other-keys)
+               (message "User Info: %s" data)))
+   :error (cl-function
+           (lambda (&rest args &key error-thrown &allow-other-keys)
+ (message "Got error: %S" error-thrown)))))
 (defun spotify-doom-authorize ()
-  "Start the Spotify authorization process using PKCE flow."
+  (let* ((code-verifier (spotify-doom-generate-random-string 128))
+         (code-challenge (spotify-doom-generate-code-challenge code-verifier)))
+    (setq spotify-doom-code-verifier code-verifier)
+    (browse-url (spotify-doom-authorization-url code-challenge))))
+
+(defun spotify-doom-callback (code)
+  (spotify-doom-request-token code spotify-doom-code-verifier))
+
+(defun spotify-doom-test ()
   (interactive)
-  (let ((code-verifier (spotify-doom-generate-code-verifier)))
-    (let ((code-challenge (spotify-doom-generate-code-challenge code-verifier)))
-      (message "Code verifier: %s, Code challenge: %s" code-verifier code-challenge)
-      (spotify-doom-start-web-server code-verifier)
-      (browse-url (spotify-doom-authorization-url code-challenge)))))
+  (spotify-doom-authorize))
 
-(provide 'spotify-doom)
-
+;; Use the spotify-doom-test function to start the authorization process.
+;; After authorizing the app and receiving a code, call spotify-doom-callback with the code as its argument.
 ;;; spotify-doom.el ends here
