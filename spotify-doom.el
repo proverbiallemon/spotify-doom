@@ -174,11 +174,29 @@
         (httpd-port 8080))
     (setq spotify-doom-code-verifier code-verifier)
     (httpd-start)
-    (browse-url (spotify-doom-authorization-url (spotify-doom-generate-code-challenge code-verifier)))))
+    (browse-url (spotify-doom-authorization-url (spotify-doom-generate-code-challenge code-verifier)))
+    (run-at-time "60 sec" nil (lambda ()
+                                (call-interactively #'spotify-doom-callback)))))
 
-(defun spotify-doom-callback (code)
-  (interactive "sEnter the code: ")
-  (spotify-doom-request-token code spotify-doom-code-verifier))
+
+(defun spotify-doom-callback ()
+  (interactive)
+  (let ((remaining-time 60)
+        (timeout nil)
+        (code nil))
+    (while (and (not timeout) (not code))
+      (setq code (read-string (format "Enter the code (time remaining: %ds): " remaining-time)))
+      (if (string-empty-p code)
+          (progn
+            (setq remaining-time (- remaining-time 1))
+            (setq timeout (= remaining-time 0))
+            (sit-for 1))
+        (spotify-doom-request-token code spotify-doom-code-verifier)))))
+
+
+(add-to-list 'load-path "/path/to/spotify-doom-extension")
+(require 'spotify-doom-extension)
+
 
 (provide 'spotify-doom)
 
