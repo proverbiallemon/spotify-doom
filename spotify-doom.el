@@ -47,6 +47,7 @@
 (require 'request)
 (require 'json)
 (require 'url-util)
+(require 'spotify-doom-api)
 
 (defvar spotify-doom-code-verifier nil)
 
@@ -175,8 +176,8 @@
     (setq spotify-doom-code-verifier code-verifier)
     (httpd-start)
     (browse-url (spotify-doom-authorization-url (spotify-doom-generate-code-challenge code-verifier)))
-    (run-at-time "60 sec" nil (lambda ()
-                                (call-interactively #'spotify-doom-callback)))))
+    (call-interactively #'spotify-doom-callback)))
+
 
 
 (defun spotify-doom-callback ()
@@ -194,7 +195,7 @@
         (spotify-doom-request-token code spotify-doom-code-verifier)))))
 
 
-(add-to-list 'load-path "/path/to/spotify-doom-extension")
+(add-to-list 'load-path "git/")
 (require 'spotify-doom-extension)
 
 
